@@ -1,0 +1,216 @@
+========================================================================
+AIDE-MÉMOIRE : SYNTAXE RUST
+
+VARIABLES ET MUTABILITÉ
+
+Par défaut, les variables sont immuables (on ne peut pas les modifier).
+
+let x = 5;          // x est immuable
+let mut y = 10;     // y est mutable, on peut changer sa valeur
+y = 15;
+const MAX: u32 = 100_000; // Constante (type obligatoire, UPPER_CASE)
+
+// Shadowing (Masquage) : On peut redéclarer une variable avec 'let'
+let x = x + 1;
+
+TYPES DE DONNÉES
+
+Rust est statiquement typé, mais possède une inférence de type.
+
+-- Types Scalaires --
+Entiers : i8, i16, i32 (défaut), i64, i128, isize / u8, u16, u32, u64, usize
+Flottants : f32, f64 (défaut)
+Booléen : bool (true, false)
+Caractère : char ('z', '😻' - 4 octets, Unicode)
+
+-- Types Composés --
+Tuples : Taille fixe, types hétérogènes.
+let tup: (i32, f64, u8) = (500, 6.4, 1);
+let (x, y, z) = tup; // Déstructuration
+let cinq_cents = tup.0; // Accès par index
+
+Tableaux (Arrays) : Taille fixe, même type. Alloués sur la pile.
+let a: [i32; 5] = [1, 2, 3, 4, 5];
+let b = [3; 5]; // [3, 3, 3, 3, 3]
+let premier = a[0];
+
+FONCTIONS
+
+Le mot-clé 'fn' est utilisé. Les types des paramètres sont obligatoires.
+La dernière expression sans point-virgule est la valeur de retour.
+
+fn ajouter(a: i32, b: i32) -> i32 {
+let somme = a + b;
+somme // Pas de point-virgule = return implicite
+// return somme; // (Alternative explicite)
+}
+
+FLUX DE CONTRÔLE
+
+-- If / Else -- (Pas de parenthèses nécessaires autour de la condition)
+let nombre = 3;
+if nombre < 5 {
+println!("Plus petit que 5");
+} else if nombre == 5 {
+println!("Égal à 5");
+} else {
+println!("Plus grand que 5");
+}
+
+// 'if' dans un 'let' (comme un opérateur ternaire)
+let condition = true;
+let x = if condition { 5 } else { 6 };
+
+-- Boucles --
+// loop : Boucle infinie
+loop {
+break;
+}
+
+// while
+let mut n = 3;
+while n != 0 {
+n -= 1;
+}
+
+// for (très utilisé avec les itérateurs)
+let a = [10, 20, 30];
+for element in a.iter() {
+println!("Valeur : {}", element);
+}
+for i in 0..5 { // 0 à 4 (exclusif)
+println!("{}", i);
+}
+
+OWNERSHIP (POSSESSION) ET BORROWING (EMPRUNT)
+
+C'est le concept central de Rust pour la gestion de la mémoire.
+
+-- Règles de l'Ownership --
+
+Chaque valeur a une variable appelée son "propriétaire" (owner).
+
+Il ne peut y avoir qu'un seul propriétaire à la fois.
+
+Quand le propriétaire sort de la portée, la valeur est détruite.
+
+let s1 = String::from("hello");
+let s2 = s1; // La possession est DÉPLACÉE (moved) vers s2. s1 est invalide.
+// let s3 = s1.clone(); // Pour faire une vraie copie.
+
+-- Borrowing (Emprunt) --
+On utilise des références (&) pour emprunter sans prendre la possession.
+fn longueur(s: &String) -> usize { s.len() } // Emprunt immuable (&)
+
+let mut s = String::from("hello");
+fn modifier(s: &mut String) { s.push_str(", world"); } // Emprunt mutable (&mut)
+
+Règle d'or des références : À un instant T, on peut avoir SOIT une (seule)
+référence mutable, SOIT n'importe quel nombre de références immuables.
+
+STRUCTURES (STRUCTS)
+
+struct Utilisateur {
+pseudo: String,
+email: String,
+actif: bool,
+}
+
+let user1 = Utilisateur {
+email: String::from("test@test.com"),
+pseudo: String::from("pseudo123"),
+actif: true,
+};
+
+// Implémentation de méthodes
+impl Utilisateur {
+// Méthode (prend &self en premier paramètre)
+fn afficher_email(&self) {
+println!("{}", self.email);
+}
+// Fonction associée (comme une méthode statique)
+fn nouveau(pseudo: String, email: String) -> Utilisateur {
+Utilisateur { pseudo, email, actif: true }
+}
+}
+
+ENUMS ET PATTERN MATCHING
+
+-- Enums --
+enum Message {
+Quitter,
+Deplacer { x: i32, y: i32 },
+Ecrire(String),
+}
+
+-- L'Enum Option (remplace la notion de Null) --
+// enum Option { Some(T), None }
+let un_nombre = Some(5);
+let absent: Option = None;
+
+-- Match (Switch surpuissant) --
+let msg = Message::Ecrire(String::from("Salut"));
+
+match msg {
+Message::Quitter => println!("On quitte"),
+Message::Deplacer { x, y } => println!("Déplacement vers {}, {}", x, y),
+Message::Ecrire(texte) => println!("Message : {}", texte),
+}
+
+GESTION DES ERREURS
+
+Pas d'exceptions en Rust.
+-- Erreurs irrécupérables --
+panic!("Le programme plante ici !");
+
+-- Erreurs récupérables (Enum Result) --
+// enum Result<T, E> { Ok(T), Err(E) }
+use std::fs::File;
+
+let f = File::open("hello.txt");
+let fichier = match f {
+Ok(file) => file,
+Err(error) => panic!("Problème d'ouverture : {:?}", error),
+};
+
+-- Opérateur ? --
+// Permet de propager l'erreur automatiquement si la fonction renvoie un Result
+fn lire_pseudo() -> Result<String, std::io::Error> {
+let mut f = File::open("pseudo.txt")?; // Si erreur, la fonction s'arrête et renvoie Err
+let mut s = String::new();
+f.read_to_string(&mut s)?;
+Ok(s)
+}
+
+COLLECTIONS COURANTES
+
+-- Vecteurs (Tableaux dynamiques) --
+let mut v = Vec::new();
+v.push(1);
+v.push(2);
+let v2 = vec![1, 2, 3]; // Macro
+
+-- Strings --
+let mut s = String::from("foo");
+s.push_str("bar");
+
+-- HashMap (Dictionnaires) --
+use std::collections::HashMap;
+let mut scores = HashMap::new();
+scores.insert(String::from("Bleu"), 10);
+
+TRAITS (INTERFACES) ET GÉNÉRIQUES
+
+-- Génériques --
+fn plus_grand<T: std::cmp::PartialOrd>(liste: &[T]) -> &T { ... }
+
+-- Traits --
+trait Resumable {
+fn resumer(&self) -> String;
+}
+
+impl Resumable for Utilisateur {
+fn resumer(&self) -> String {
+format!("{} ({})", self.pseudo, self.email)
+}
+}
