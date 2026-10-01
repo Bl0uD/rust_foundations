@@ -1,8 +1,8 @@
-use axum::{routing::{get, post}, Router};
+use axum::{routing::{get, post, delete}, Router};
 use sqlx::postgres::PgPoolOptions;
 
 mod handlers;
-use handlers::{create_user, get_user};
+use handlers::{create_user, get_user, delete_user, update_user};
 
 async fn hello() -> &'static str {
 	"Bienvenue sur mon API Rust !"
@@ -38,6 +38,7 @@ async fn main() {
 		.route("/", get(hello))
 		.route("/user", get(get_user))
 		.route("/create_user", post(create_user))
+		.route("/user/{id}", delete(delete_user).put(update_user))
 		.with_state(pool); // injecteur de donnees
 
 	let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
