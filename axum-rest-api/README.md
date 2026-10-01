@@ -55,14 +55,14 @@ async fn create_user(State(pool): State<PgPool>, Json(payload): Json<CreateUser>
 async fn delete_user(Path(id): Path<i32>)
 ```
 
-4. Method Chaining for Routes
+### 4. Method Chaining for Routes
 Axum allows handling multiple HTTP methods on the exact same URL path by chaining the handlers:
 
 ```rust
 .route("/user/{id}", delete(delete_user).put(update_user))
 ```
 
-5. Compile-time SQL (sqlx)
+### 5. Compile-time SQL (sqlx)
 SQLx allows us to write raw SQL while validating table structures and types against the database during compilation.
 
 ```rust
@@ -73,20 +73,20 @@ let user = sqlx::query_as::<_, Utilisateur>("SELECT * FROM utilisateurs")
 This project requires a PostgreSQL database to run. We use a local Docker container for this.
 ```
 
-1. Start the PostgreSQL Database (Docker):
+## 1. Start the PostgreSQL Database (Docker):
 
 ```bash
 docker run --name ma-base-rust -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=monmotdepasse -e POSTGRES_DB=rust_api_db -p 5432:5432 -d postgres
 ```
 
-2. Run the Rust Server:
+## 2. Run the Rust Server:
 
 ```bash
 cargo run
 (Table creation is handled automatically on startup).
 ```
 
-3. Test the Full CRUD (curl commands):
+## 3. Test the Full CRUD (curl commands):
 
 ```bash
 # CREATE
