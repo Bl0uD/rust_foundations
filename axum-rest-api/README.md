@@ -73,20 +73,20 @@ let user = sqlx::query_as::<_, Utilisateur>("SELECT * FROM utilisateurs")
 This project requires a PostgreSQL database to run. We use a local Docker container for this.
 ```
 
-## 1. Start the PostgreSQL Database (Docker):
+#### 1. Start the PostgreSQL Database (Docker):
 
 ```bash
 docker run --name ma-base-rust -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=monmotdepasse -e POSTGRES_DB=rust_api_db -p 5432:5432 -d postgres
 ```
 
-## 2. Run the Rust Server:
+#### 2. Run the Rust Server:
 
 ```bash
 cargo run
 (Table creation is handled automatically on startup).
 ```
 
-## 3. Test the Full CRUD (curl commands):
+#### 3. Test the Full CRUD (curl commands):
 
 ```bash
 # CREATE
