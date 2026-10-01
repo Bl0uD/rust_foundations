@@ -8,10 +8,10 @@ This progression builds the foundation necessary for migrating complex, real-tim
 
 This mono-repo is divided into three distinct projects, each focusing on a specific domain of the Rust ecosystem. 
 
-### 1. [REST API with Axum](./axum-rest-api/)
-A foundational asynchronous web service.
-* **Focus:** Routing, asynchronous runtimes (`tokio`), JSON serialization (`serde`), and structural error handling without exceptions (`Result<T, E>`).
-* **Why it matters:** Establishes the baseline for building fast, reliable HTTP backends.
+### 1. [REST API with Axum & PostgreSQL](./axum-rest-api/)
+A foundational asynchronous web service connected to a relational database.
+* **Focus:** Routing, modular architecture (`mod`, `pub`), asynchronous runtimes (`tokio`), JSON serialization (`serde`), structural error handling (`Result<T, E>`), and compile-time checked SQL queries (`sqlx` & Connection Pools).
+* **Why it matters:** Establishes the baseline for building fast, reliable HTTP backends interacting securely with persistent data.
 
 ### 2. [CLI Process Manager](./rs-process-manager/)
 A cross-platform system utility tool interacting directly with OS APIs.

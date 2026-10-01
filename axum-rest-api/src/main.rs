@@ -1,65 +1,47 @@
-use axum::{routing::{get, post}, Router, Json};
-use axum::http::StatusCode;
-use serde::{Deserialize, Serialize};
+use axum::{routing::{get, post}, Router};
+use sqlx::postgres::PgPoolOptions;
+
+mod handlers;
+use handlers::{create_user, get_user};
 
 async fn hello() -> &'static str {
-    "Bienvenue sur mon API Rust !"
-}
-
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-    email: String,
-}
-
-#[derive(Serialize)]
-struct Utilisateur {
-    id: u32,
-    username: String,
-    email: String,
-}
-
-async fn create_user(Json(payload): Json<CreateUser>,) -> Result<(StatusCode, Json<Utilisateur>), (StatusCode, String)> {
-	// On simule une insertion en base de données
-    // "payload" contient les données désérialisées
-    println!("Nouveau user reçu : {}", payload.username);
-
-	if !payload.email.contains('@') {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "Format d'email invalide : il manque un '@'".to_string(),
-        ));
-    }
-
-	let new_user = Utilisateur {
-		id: 99, // On simule un ID généré
-		username: payload.username,
-		email: payload.email,
-	};
-
-	// À la place de : (StatusCode::CREATED, Json(new_user))
-    // Écris :
-    Ok((StatusCode::CREATED, Json(new_user)))
-}
-
-async fn get_user() -> Json<Utilisateur> {
-    // On crée une instance de notre structure
-    let user = Utilisateur {
-        id: 42,
-        username: String::from("rust_student"), 
-        email: "student@42.fr".to_string(), // .to_string() est une autre façon de créer une String
-    };
-
-    // On enveloppe notre objet dans Json() pour Axum
-    Json(user)
+	"Bienvenue sur mon API Rust !"
 }
 
 #[tokio::main]
 async fn main() {
-	let app = Router::new().route("/", get(hello)).route("/user", get(get_user)).route("/create_user", post(create_user));
+	// 1. Définir l'URL de connexion (On utilisera des variables d'environnement plus tard)
+	// Format : postgres://utilisateur:motdepasse@hote:port/nom_de_la_base
+	let db_url = "postgres://postgres:monmotdepasse@localhost:5432/rust_api_db";
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Serveur lancé sur le port 3000...");
-    
-    axum::serve(listener, app).await.unwrap();
+	// 2. Créer le Pool de connexions
+	let pool = PgPoolOptions::new()
+		.max_connections(5) // On garde 5 connexions ouvertes maximum
+		.connect(db_url)
+		.await
+		.expect("Erreur : Impossible de se connecter à la base de données PostgreSQL");
+
+	println!("✅ Connexion à la base de données réussie !");
+
+	sqlx::query(
+		"CREATE TABLE IF NOT EXISTS utilisateurs (
+			id SERIAL PRIMARY KEY,
+			username TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE
+		)"
+	)
+	.execute(&pool)
+	.await
+	.expect("Erreur lors de la création de la table");
+
+	let app = Router::new()
+		.route("/", get(hello))
+		.route("/user", get(get_user))
+		.route("/create_user", post(create_user))
+		.with_state(pool); // injecteur de donnees
+
+	let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+	println!("Serveur lancé sur le port 3000...");
+	
+	axum::serve(listener, app).await.unwrap();
 }
